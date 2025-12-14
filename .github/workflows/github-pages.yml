@@ -6,11 +6,29 @@ on:
       - main
 
 jobs:
-  github-pages:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: helaili/jekyll-action@v2
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Ruby 3.2
+        uses: ruby/setup-ruby@v1
         with:
-          token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
-          target_branch: gh-pages
+          ruby-version: "3.2"
+
+      - name: Install Bundler 4
+        run: gem install bundler -v 4.0.1
+
+      - name: Bundle install
+        run: bundle install --jobs 4 --retry 3
+
+      - name: Build site with Jekyll
+        run: bundle exec jekyll build --destination _site
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
+          publish_dir: ./_site
+          publish_branch: gh-pages
